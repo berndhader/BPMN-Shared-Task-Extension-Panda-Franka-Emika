@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Panda-BPMN-Extension</title>
+
+  <script src="js/jquery.min.js"></script>
+
+  <link rel="stylesheet" href="css/diagram-js.css" />
+  <link rel="stylesheet" href="vendor/bpmn-font/css/bpmn-embedded.css" />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/animateTask.css" />
+
+  <!-- QUILL -->
+  <link rel="canonical" href="https://quilljs.com/standalone/full/">
+  <link type="application/atom+xml" rel="alternate" href="https://quilljs.com/feed.xml" title="Quill - Your powerful rich text editor" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/monokai-sublime.min.css" />
+  <link rel="stylesheet" href="./quill.snow.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script src="./quill.min.js"></script>
+
+
+  <style>
+    #standalone-container {
+      margin: 50px auto;
+      max-width: 720px;
+    }
+    #editor-container {
+      height: 350px;
+    }
+
+    .closebtn {
+      position: absolute;
+      top: 0;
+      right: 5px;
+      font-size: 32px;
+      margin-right: 5px;
+      color: darkgrey;
+    }
+
+    .closebtn:hover {
+      position: absolute;
+      top: 0;
+      right: 5px;
+      font-size: 32px;
+      margin-right: 5px;
+      color: black;
+      text-decoration: none;
+    }
+
+    .ham-menu { display: inline-block; position: relative; margin: 25px 0; } /* margin = (width-height)/2 */
+    .ham-menu, .ham-menu::before, .ham-menu::after { width: 25px; height: 5px; border-radius: 5px; background-color: darkgrey; }
+    .ham-menu::before, .ham-menu::after { content: ""; display: block; position: absolute; }
+    .ham-menu::before { bottom: 150%; } .ham-menu::after { top: 130%; }
+
+  </style>
+
+  <!-- Animation css style -->
+  <style>
+    .path {
+      stroke-dasharray: 120;
+      animation: dashdraw 2s linear infinite;
+      stroke: lightgreen;
+    }
+
+    @keyframes dashdraw {
+      to {
+        stroke-dashoffset: 240;
+      }
+    }
+
+    .path2 {
+      stroke-dasharray: 70;
+      animation: dashdraw2 2s linear infinite;
+      stroke: lightgreen;
+    }
+
+    @keyframes dashdraw2 {
+      to {
+        stroke-dashoffset: 140;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div style='width: 100%; text-align: center; padding-top: 10px; background-color: rgb(167, 227, 255); background: radial-gradient(rgb(74, 210, 149), rgb(74, 210, 149)); height: 60px;'>
+    <a onclick="deployProcess()"><img id='play_pause_button' src='img/play.png' width="40px" /></a>
+  </div>
+
+  <div class="content with-diagram" id="js-drop-zone" style="height: 90%">
+
+    <div class="message intro">
+      <div class="note">
+        Drop BPMN diagram from your desktop or <a id="js-create-diagram" href>create a new diagram</a> to get started.
+      </div>
+    </div>
+
+    <div class="message error">
+      <div class="note">
+        <p>Ooops, we could not display the BPMN 2.0 diagram.</p>
+
+        <div class="details">
+          <span>Import Error Details</span>
+          <pre></pre>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="canvas" id="js-canvas"></div>
+
+       <div class="openWorkerAss" id="openWorker" style="padding: 5px; margin: 5px;" style="visibility: hidden;">
+        <a href="javascript:void(0)" onclick="document.getElementById('js-properties-panel2').style.width = '400px';">
+        <!-- <span class="ham-menu" style="visibility: hidden;" id="openWorkerSpan">></span> -->
+       </a>
+       </div>
+    <div class="properties-panel-parent2" id="js-properties-panel2" style="visibility: hidden;">
+
+      <div style="width: 100%; text-align: left; padding: 5px; margin: 5px;">
+        <a href="javascript:void(0)" class="closebtn" onclick="document.getElementById('js-properties-panel2').style.width = '0px';">x</a>
+        <br />
+        <br />
+        <h3>Additional Instructions</h3>
+      </div>
+
+      <div id="standalone-container" style="width: 95%;  margin: 0; padding: 0; background-color: white; margin: 10px;">
+        <div id="toolbar-container">
+          <span class="ql-formats">
+            <select class="ql-font"></select>
+            <select class="ql-size"></select>
+          </span>
+          <span class="ql-formats">
+            <button class="ql-bold"></button>
+            <button class="ql-italic"></button>
+            <button class="ql-underline"></button>
+            <button class="ql-strike"></button>
+          </span>
+          <span class="ql-formats">
+            <select class="ql-color"></select>
+            <select class="ql-background"></select>
+          </span>
+          <span class="ql-formats">
+            <button class="ql-script" value="sub"></button>
+            <button class="ql-script" value="super"></button>
+          </span>
+          <span class="ql-formats">
+            <button class="ql-header" value="1"></button>
+            <button class="ql-header" value="2"></button>
+            <button class="ql-blockquote"></button>
+            <button class="ql-code-block"></button>
+          </span>
+          <span class="ql-formats">
+            <button class="ql-list" value="ordered"></button>
+            <button class="ql-list" value="bullet"></button>
+            <button class="ql-indent" value="-1"></button>
+            <button class="ql-indent" value="+1"></button>
+          </span>
+          <span class="ql-formats">
+            <button class="ql-direction" value="rtl"></button>
+            <select class="ql-align"></select>
+          </span>
+          <span class="ql-formats">
+            <button class="ql-link"></button>
+            <button class="ql-image"></button>
+            <button class="ql-video"></button>
+            <button class="ql-formula"></button>
+          </span>
+          <span class="ql-formats">
+            <button class="ql-clean"></button>
+          </span>
+        </div>
+        <div id="editor-container"></div>
+      </div>
+    </div>
+    <div class="properties-panel-parent" id="js-properties-panel"></div>
+
+    <div class="properties-panel-parent" id="iframe-div" style="visibility: hidden">
+
+    </div>
+
+    <div class="properties-panel-parent" id="js-execution-panel" style="visibility: hidden">
+      <button onclick='completeUserTask()'>Task completed</button>
+    </div>
+  </div>
+
+  <ul class="buttons">
+    <li>
+      <a id="js-download-diagram" href title="download BPMN diagram">
+        Download Diagram
+      </a>
+    </li>
+  </ul>
+
+
+
+
+
+  <div class="" style="visibility: hidden" id="franka_iframe" height="200px">
+        <iframe src="http://192.168.0.1/desk/" width="100%" height="200px"></iframe>
+  </div>
+
+  <div id="text-worker" style="visibility: hidden;"></div>
+
+  <script>
+    var quill = new Quill('#editor-container', {
+      modules: {
+        formula: true,
+        syntax: true,
+        toolbar: '#toolbar-container'
+      },
+      placeholder: 'Add additional information, such as text, images or videos',
+      theme: 'snow'
+    });
+
+    var workerAss = [];
+
+    $('.ql-editor').blur(
+
+      function(){
+
+      //  var editor_content = $("#editor-container .ql-editor").html();
+      var editor_content = quill.root.innerHTML;
+        //console.log(editor_content);
+
+        var activeUserTask = $('#activeUserTask').val();
+        //console.log(activeUserTask);
+        workerAss[activeUserTask] = editor_content;
+      }
+
+    );
+
+    function printText(){
+
+      var editor_content = $("#editor-container .ql-editor").html();
+      alert(editor_content);
+
+    }
+
+    function setWorkerAssContent(){
+
+      var activeUserTask = $('#activeUserTask').val();
+      var editor_content = workerAss[activeUserTask];
+      if(editor_content != null){
+          //console.log(editor_content);
+
+          quill.root.innerHTML = editor_content;
+      }
+      else{
+        quill.root.innerHTML = "";
+      }
+    }
+
+    function setWorkerAssExecution(){
+
+      var activeUserTask = $('#activeUserTask').val();
+      var editor_content = workerAss[activeUserTask];
+
+      if(editor_content == null){
+        editor_content = "";
+      }
+
+
+      if(editor_content != $("#text-worker").text()){
+        if(editor_content != null){
+            //console.log(editor_content);
+          $("#text-worker").text(editor_content);
+        }
+        else{
+          $("#text-worker").text("");
+        }
+      }
+
+
+    }
+
+    function clearWorkerAss(){
+        $("#text-worker").text("");
+    }
+
+  </script>
+
+
+
+  <input type='hidden' id='diagram' />
+  <input type='hidden' id='activeUserTask' />
+
+  <script src="js/index.js"></script>
+  <script src="js/executeBPMN.js"></script>
+
+
+
+  <script>
+
+      function saveAlert(){
+
+          var form = $("#finishExperiment");
+
+          swal({   title: "Experiment wirklich beenden?",
+                  text: "",
+                  type: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  confirmButtonText: "Ja, weiter zum Fragebogen!",
+                  cancelButtonText: "Nein, ich möchte noch Änderungen vornehmen!",
+                  closeOnConfirm: false,   closeOnCancel: true },
+              function(isConfirm){   if (isConfirm) { form.submit(); }});
+
+      }
+
+      function changeToUserTask(id){
+
+          var element = bpmnMod.get('elementRegistry').get(id);
+
+          if(element.type == "bpmn:ServiceTask"){
+
+            var newElementData =  {
+                type: 'bpmn:UserTask'
+            };
+
+            var pandaTaskId = (element.businessObject.$attrs.pandaTaskId);
+
+              var replace = bpmnMod.get('bpmnReplace');
+              var newElement = replace.replaceElement(element, newElementData);
+
+              var modeling = bpmnMod.get('modeling');
+              modeling.updateProperties(newElement, {
+                  'pandaTaskId': pandaTaskId
+              });
+
+          }
+
+      }
+
+      function changeToServiceTask(id){
+
+          var element = bpmnMod.get('elementRegistry').get(id);
+
+          if(element.type == "bpmn:UserTask") {
+
+              var newElementData = {
+                  type: 'bpmn:ServiceTask',
+              };
+
+              var pandaTaskId = (element.businessObject.$attrs.pandaTaskId);
+
+              var replace = bpmnMod.get('bpmnReplace');
+              var newElement = replace.replaceElement(element, newElementData);
+
+              var modeling = bpmnMod.get('modeling');
+              modeling.updateProperties(newElement, {
+                  'pandaTaskId': pandaTaskId
+              });
+
+          }
+
+      }
+
+      var bpmnMod = "";
+
+      function setBPMNModeler(bpmnmodeler){
+          this.bpmnMod = bpmnmodeler;
+          console.dir(this.bpmnMod);
+      }
+
+  </script>
+
+</html>
